@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>WorshipPro NNS App</title>
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --bg-main: #0f172a;
+      --bg-surface: #1e293b;
+      --bg-card: #334155;
+      --primary: #8b5cf6;
+      --primary-hover: #7c3aed;
+      --accent: #06b6d4;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #475569;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    html, body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Gesamt-Layout-Retter gegen Abschneiden auf Handys */
+    .app-wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: -webkit-fill-available;
+    }
+
+    header {
+      background-color: var(--bg-surface);
+      padding: 1.2rem;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    
+    header h1 span {
+      color: var(--primary);
+    }
+
+    /* Scrollbarer Inhalt */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 1rem 5rem 1rem; /* Platz für Nav unten */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    /* Feste Bottom Navigation */
+    nav.bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.8rem 0;
+      z-index: 100;
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      flex: 1;
+      transition: color 0.2s;
+    }
+
+    .nav-btn.active {
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    .nav-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    /* UI Cards */
+    .card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+    }
+
+    .card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .meta-badge {
+      display: inline-block;
+      background-color: var(--bg-card);
+      color: var(--accent);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+
+    .strumming-badge {
+      display: inline-block;
+      background-color: rgba(139, 92, 246, 0.15);
+      color: var(--primary);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Forms & Inputs */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    button.btn {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.85rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Song View & NNS */
+    .song-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      background: var(--bg-surface);
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .song-content {
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 1.1rem;
+      line-height: 2.3;
+      background-color: var(--bg-surface);
+      padding: 1.25rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .nns-num {
+      display: inline-block;
+      background-color: var(--primary);
+      color: white;
+      padding: 0 0.35rem;
+      border-radius: 4px;
+      font-weight: bold;
+      font-family: sans-serif;
+      margin: 0 0.1rem;
+      font-size: 0.9rem;
+      position: relative;
+    }
+    
+    .chord-real-sub {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-family: sans-serif;
+      font-weight: bold;
+      background: var(--bg-main);
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      line-height: 1;
+    }
+
+    /* Akkord-Bibliothek Grid */
+    .chord-grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .chord-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+
+    .chord-name {
+      font-weight: bold;
+      font-size: 1.2rem;
+      margin-bottom: 0.25rem;
+      color: var(--accent);
+    }
+    
+    .chord-nns-relation {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Strumming-Visualizer */
+    .strumming-visualizer {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+    }
+    
+    .strum-step {
+      flex: 1;
+      background: var(--bg-card);
+      padding: 0.4rem;
+      border-radius: 4px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+    .strum-step.active-down { background: var(--primary); color: white; }
+    .strum-step.active-up { background: var(--accent); color: var(--bg-main); }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 3rem 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-wrapper">
+    <header>
+      <h1>Worship<span>Pro</span></h1>
+    </header>
+
+    <div class="main-content">
+      <div class="container">
+        
+        <div id="view-songs" class="view active">
+          <h2 style="margin-bottom: 1rem;">Song-Bibliothek</h2>
+          <div id="songs-list"></div>
+        </div>
+
+        <div id="view-song-detail" class="view">
+          <button class="btn" style="width: auto; margin-bottom: 1rem; padding: 0.5rem 1rem;" onclick="switchView('songs')">← Bibliothek</button>
+          <div id="song-detail-content"></div>
+        </div>
+
+        <div id="view-add" class="view">
+          <h2>Eigenes Lied reintun</h2>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; margin-bottom: 1.5rem;">
+            Akkord-Stufen einfach in eckige Klammern setzen, z.B. [1], [4], [5] oder [6m].
+          </p>
+          <form id="song-form" onsubmit="saveSong(event)">
+            <div class="form-group">
+              <label for="title">Songtitel</label>
+              <input type="text" id="title" required placeholder="z.B. Way Maker">
+            </div>
+            <div class="form-group">
+              <label for="key">Original-Tonart (Stufe 1)</label>
+              <select id="key">
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+                <option value="G" selected>G</option>
+                <option value="A">A</option>
+                <option value="B">H / B</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="strumming">Schlagmuster / Strumming (z.B. D D U U D U)</label>
+              <input type="text" id="strumming" placeholder="D = Runter, U = Hoch, - = Pause">
+            </div>
+            <div class="form-group">
+              <label for="lyrics">Songtext & NNS Akkorde</label>
+              <textarea id="lyrics" rows="10" required placeholder="[1] Du bist hier, wirkst an diesem [5] Ort. Ich bete [6m] dich an..."></textarea>
+            </div>
+            <button type="submit" class="btn">In Bibliothek speichern</button>
+          </form>
+        </div>
+
+        <div id="view-chords" class="view">
+          <h2>Akkord-Bibliothek</h2>
+          <div class="form-group" style="margin-top: 1rem;">
+            <label for="library-key-select">Wähle Tonart für Griff-Vorschau:</label>
+            <select id="library-key-select" onchange="renderChordLibrary()">
+              <option value="C">C</option>
+              <option value="D">D</option>
+              <option value="E">E</option>
+              <option value="F">F</option>
+              <option value="G" selected>G</option>
+              <option value="A">A</option>
+              <option value="B">H / B</option>
+            </select>
+          </div>
+          <div id="chord-library-grid" class="chord-grid-container"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" id="nav-songs" onclick="switchView('songs')">
+        <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+        Bibliothek
+      </button>
+      <button class="nav-btn" id="nav-add" onclick="switchView('add')">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Reintun
+      </button>
+      <button class="nav-btn" id="nav-chords" onclick="switchView('chords')">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+        Akkorde
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    // --- DATEN-SPEICHER & BEISPIEL ---
+    let songs = JSON.parse(localStorage.getItem('worship_nns_songs')) || [
+      {
+        id: 1,
+        title: "Goodness of God (NNS-Beispiel)",
+        key: "G",
+        strumming: "D D U U D U",
+        lyrics: "[1] Ich liebe dich, Herr, denn deine [4] Gnade versagt nie [5]\n[6m] Alle meine Tage [4] bin ich in deiner [5] Hand"
+      }
+    ];
+
+    const scaleRoots = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const nnsSteps = [0, 2, 4, 5, 7, 9, 11];
+    const nnsQuality = ["", "m", "m", "", "", "m", "dim"];
+
+    // Griffbrett-Koordinaten für Gitarren-Grafiken
+    const chordDefinitions = {
+      "C":  { frets: [0, 1, 0, 2, 3, 'x'] },
+      "C#m":{ frets: [4, 5, 6, 6, 4, 'x'] },
+      "D":  { frets: [2, 3, 2, 0, 'x', 'x'] },
+      "Dm": { frets: [1, 3, 2, 0, 'x', 'x'] },
+      "D#m":{ frets: [6, 7, 8, 8, 6, 'x'] },
+      "E":  { frets: [0, 0, 1, 2, 2, 0] },
+      "Em": { frets: [0, 0, 0, 2, 2, 0] },
+      "F":  { frets: [1, 1, 2, 3, 3, 1] },
+      "F#m":{ frets: [2, 2, 2, 4, 4, 2] },
+      "G":  { frets: [3, 3, 0, 0, 2, 3] },
+      "G#m":{ frets: [4, 4, 4, 6, 6, 4] },
+      "A":  { frets: [0, 2, 2, 2, 0, 'x'] },
+      "Am": { frets: [0, 1, 2, 2, 0, 'x'] },
+      "A#m":{ frets: [1, 2, 3, 3, 1, 'x'] },
+      "B":  { frets: [2, 4, 4, 4, 2, 'x'] },
+      "Bm": { frets: [2, 3, 4, 4, 2, 'x'] },
+      "F#dim": { frets: [2, 1, 2, 0, 'x', 'x'] },
+    };
+
+    // --- NAVIGATION-ENGINE ---
+    function switchView(viewName) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      
+      const targetView = document.getElementById(`view-${viewName}`);
+      if(targetView) targetView.classList.add('active');
+      
+      const targetNav = document.getElementById(`nav-${viewName}`);
+      if(targetNav) targetNav.classList.add('active');
+
+      if (viewName === 'songs') renderSongsList();
+      if (viewName === 'chords') renderChordLibrary();
+    }
+
+    // --- STRUMMING GRAFIK GENERIEREN ---
+    function generateStrummingHTML(pattern) {
+      if(!pattern) return '';
+      const steps = pattern.split(/(\s+|-)/).filter(s => s.trim().length > 0 || s === '-');
+      let html = '<div class="strumming-visualizer">';
+      steps.forEach(step => {
+        if(step.toUpperCase().includes('D')) {
+          html += `<div class="strum-step active-down">↓</div>`;
+        } else if(step.toUpperCase().includes('U')) {
+          html += `<div class="strum-step active-up">↑</div>`;
+        } else {
+          html += `<div class="strum-step" style="opacity:0.3;">•</div>`;
+        }
+      });
+      html += '</div>';
+      return html;
+    }
+
+    // --- AKKORDE VEKTOR-ZEICHNER ---
+    function generateChordSVG(chordName) {
+      const chord = chordDefinitions[chordName] || { frets: [0,0,0,0,0,0] };
+      const stringsX = [20, 40, 60, 80, 100, 120];
+      const fretsY = [30, 55, 80, 105, 130];
+      
+      let svg = `<svg width="130" height="150" viewBox="0 0 140 155" style="background:#1e293b; border-radius:8px; margin-top:5px;">`;
+      svg += `<line x1="20" y1="30" x2="120" y2="30" stroke="#f8fafc" stroke-width="4"/>`;
+      
+      for(let i=1; i<fretsY.length; i++) {
+        svg += `<line x1="20" y1="${fretsY[i]}" x2="120" y2="${fretsY[i]}" stroke="#475569" stroke-width="1"/>`;
+      }
+      for(let i=0; i<stringsX.length; i++) {
+        svg += `<line x1="${stringsX[i]}" y1="30" x2="${stringsX[i]}" y2="130" stroke="#94a3b8" stroke-width="1.5"/>`;
+      }
+      for(let i=0; i<6; i++) {
+        let val = chord.frets[i];
+        let stringX = stringsX[5 - i];
+        if (val === 'x') {
+          svg += `<text x="${stringX}" y="22" font-size="12" fill="#ef4444" text-anchor="middle" font-weight="bold">X</text>`;
+        } else if (val === 0) {
+          svg += `<circle cx="${stringX}" cy="20" r="4" fill="none" stroke="#06b6d4" stroke-width="2"/>`;
+        } else {
+          let dotY = fretsY[val - 1] + 12.5; 
+          svg += `<circle cx="${stringX}" cy="${dotY}" r="5" fill="#8b5cf6"/>`;
+        }
+      }
+      svg += `</svg>`;
+      return svg;
+    }
+
+    function getRealChordName(nnsToken, currentKey) {
+      let digitMatch = nnsToken.match(/\d+/);
+      if(!digitMatch) return "";
+      let degree = parseInt(digitMatch[0]);
+      let modifier = nnsToken.replace(digitMatch[0], "");
+      let rootIdx = scaleRoots.indexOf(currentKey);
+      if(rootIdx === -1) return "";
+      
+      let targetSemitone = nnsSteps[degree - 1];
+      let finalChordRoot = scaleRoots[(rootIdx + targetSemitone) % 12];
+      let standardQuality = nnsQuality[degree - 1];
+      return finalChordRoot + (modifier || standardQuality);
+    }
+
+    // --- SONGS LADEN & RENDERN ---
+    function renderSongsList() {
+      const container = document.getElementById('songs-list');
+      if (songs.length === 0) {
+        container.innerHTML = '<div class="empty-state">Deine Bibliothek ist leer. Klicke unten auf "Reintun", um Songs hinzuzufügen!</div>';
+        return;
+      }
+      container.innerHTML = songs.map(song => `
+        <div class="card" onclick="viewSongDetail(${song.id})">
+          <h3>${song.title}</h3>
+          <div>
+            <span class="meta-badge">Key: 1 = ${song.key}</span>
+            ${song.strumming ? `<span class="strumming-badge">Pattern: ${song.strumming}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- SONG ÖFFNEN ---
+    function viewSongDetail(id) {
+      const song = songs.find(s => s.id === id);
+      if(!song) return;
+      
+      switchView('song-detail');
+      const detailContainer = document.getElementById('song-detail-content');
+      
+      detailContainer.innerHTML = `
+        <div class="song-header">
+          <h2 style="font-size:1.6rem; margin-bottom:0.5rem;">${song.title}</h2>
+          <div class="song-controls">
+            <label style="margin:0; font-weight:bold;">Akkorde anzeigen in Tonart:</label>
+            <select id="transpose-select" onchange="updateSongChordsDisplay('${escape(song.lyrics)}', this.value)">
+              <option value="NNS" selected>Nur NNS (Zahlen)</option>
+              <option value="C">C-Dur</option>
+              <option value="D">D-Dur</option>
+              <option value="E">E-Dur</option>
+              <option value="F">F-Dur</option>
+              <option value="G">G-Dur</option>
+              <option value="A">A-Dur</option>
+              <option value="B">H / B-Dur</option>
+            </select>
+          </div>
+          ${song.strumming ? `
+            <div style="background: var(--bg-surface); padding: 0.75rem; border-radius:8px; border:1px solid var(--border); margin-bottom:1rem;">
+              <span class="strumming-badge">Muster: ${song.strumming}</span>
+              ${generateStrummingHTML(song.strumming)}
+            </div>
+          ` : ''}
+        </div>
+        <div class="song-content" id="lyrics-render-box"></div>
+        <button class="btn" style="background-color: #ef4444; margin-top: 2rem;" onclick="deleteSong(${song.id})">Lied aus Bibliothek löschen</button>
+      `;
+      updateSongChordsDisplay(song.lyrics, "NNS");
+    }
+
+    function updateSongChordsDisplay(rawLyrics, targetKey) {
+      let decodedLyrics = unescape(rawLyrics);
+      const box = document.getElementById('lyrics-render-box');
+      
+      let parsed = decodedLyrics.replace(/\[([1-7][a-zA-Z]*)\]/g, (match, token) => {
+        let realChord = "";
+        if(targetKey !== "NNS") {
+          realChord = getRealChordName(token, targetKey);
+        }
+        return `<span class="nns-num">${token}${realChord ? `<span class="chord-real-sub">${realChord}</span>` : ''}</span>`;
+      });
+      box.innerHTML = parsed;
+    }
+
+    // --- NEUES LIED SPEICHERN ---
+    function saveSong(e) {
+      e.preventDefault();
+      const title = document.getElementById('title').value;
+      const key = document.getElementById('key').value;
+      const strumming = document.getElementById('strumming').value;
+      const lyrics = document.getElementById('lyrics').value;
+      
+      songs.push({ id: Date.now(), title, key, strumming, lyrics });
+      localStorage.setItem('worship_nns_songs', JSON.stringify(songs));
+      
+      document.getElementById('song-form').reset();
+      switchView('songs');
+    }
+
+    function deleteSong(id) {
+      if(confirm('Dieses Lied wirklich löschen?')) {
+        songs = songs.filter(s => s.id !== id);
+        localStorage.setItem('worship_nns_songs', JSON.stringify(songs));
+        switchView('songs');
+      }
+    }
+
+    // --- AKKORDBIBLIOTHEK AKKTUALISIEREN ---
+    function renderChordLibrary() {
+      const activeKey = document.getElementById('library-key-select').value;
+      const grid = document.getElementById('chord-library-grid');
+      grid.innerHTML = "";
+      
+      for(let i = 1; i <= 7; i++) {
+        let nnsToken = i + nnsQuality[i-1];
+        let realChord = getRealChordName(nnsToken, activeKey);
+        
+        let chordBox = document.createElement('div');
+        chordBox.className = 'chord-card';
+        chordBox.innerHTML = `
+          <div class="chord-name">${realChord || nnsToken}</div>
+          <div class="chord-nns-relation">Stufe [ ${nnsToken} ]</div>
+          ${generateChordSVG(realChord)}
+        `;
+        grid.appendChild(chordBox);
+      }
+    }
+
+    // Start-Setup
+    renderSongsList();
+  </script>
+</body>
+</html>
