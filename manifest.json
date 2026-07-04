@@ -1,0 +1,17 @@
+{
+  "short_name": "WorshipPro",
+  "name": "WorshipPro Nashville Number System App",
+  "description": "Verwalte und transponiere Worship-Lieder mithilfe des Nashville Number Systems.",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%238b5cf6'><rect width='512' height='512' rx='100' fill='%231e1e24'/><path d='M160 128h192v48H160zm0 112h192v48H160zm0 112h192v48H160z' fill='%238b5cf6'/><text x='50%' y='60%' font-family='sans-serif' font-size='120' fill='white' text-anchor='middle' font-weight='bold'>1</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#0f172a",
+  "theme_color": "#8b5cf6",
+  "display": "standalone",
+  "orientation": "portrait"
+}
